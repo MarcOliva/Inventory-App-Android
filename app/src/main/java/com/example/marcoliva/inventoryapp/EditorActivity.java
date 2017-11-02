@@ -17,6 +17,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
+        setTitle("Add a Product");
     }
 
     @Override

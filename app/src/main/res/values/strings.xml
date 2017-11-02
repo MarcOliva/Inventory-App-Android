@@ -4,5 +4,10 @@
     <string name="hint_stock">Stock</string>
     <string name="hint_price">Price</string>
     <string name="choose_image">Choose Image</string>
+    <!-- Title text for the empty view, which describes the empty store [CHAR LIMIT=50] -->
+    <string name="empty_view_title_text">Your inventory of products is empty...</string>
+
+    <!-- Subtitle text for the empty view that prompts the user to add a product [CHAR LIMIT=50] -->
+    <string name="empty_view_subtitle_text">Get started by adding a product</string>
     
 </resources>
