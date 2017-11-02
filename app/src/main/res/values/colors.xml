@@ -4,4 +4,10 @@
     <color name="colorPrimaryDark">#5f4339</color>
     <color name="colorAccent">#ffcc80</color>
     <color name="colorTitleApp">#000</color>
+
+    <!-- Primary color for the editor -->
+    <color name="editorColorPrimary">#2D3640</color>
+
+    <!-- Primary dark color for the editor -->
+    <color name="editorColorPrimaryDark">#394450</color>
 </resources>
