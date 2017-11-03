@@ -9,5 +9,7 @@
 
     <!-- Subtitle text for the empty view that prompts the user to add a product [CHAR LIMIT=50] -->
     <string name="empty_view_subtitle_text">Get started by adding a product</string>
-    
+
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
 </resources>
