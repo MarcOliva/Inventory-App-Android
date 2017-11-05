@@ -17,7 +17,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.marcoliva.inventoryapp.data.ProductContract;
 
@@ -27,7 +26,6 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     private ProductCursorAdapter mCursorAdapter;
     private static final int PRODUCT_LOADER = 0;
     private ListView productListView;
-    private TextView saleTextView;
 
     private final int REQUEST_CODE = 999;
 
