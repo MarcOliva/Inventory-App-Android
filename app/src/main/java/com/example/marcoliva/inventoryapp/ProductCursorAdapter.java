@@ -2,8 +2,7 @@ package com.example.marcoliva.inventoryapp;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,8 +18,9 @@ import com.example.marcoliva.inventoryapp.data.ProductContract;
 
 public class ProductCursorAdapter extends CursorAdapter {
 
+
     public ProductCursorAdapter(Context context, Cursor c) {
-        super(context, c);
+        super(context, c, 0);
     }
 
     @Override
@@ -30,6 +30,7 @@ public class ProductCursorAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
+
         TextView mNameProduct = view.findViewById(R.id.product_name);
         TextView mStockProduct = view.findViewById(R.id.product_stock);
         TextView mPriceProduct = view.findViewById(R.id.product_price);
@@ -43,13 +44,19 @@ public class ProductCursorAdapter extends CursorAdapter {
         String nameProduct = cursor.getString(nameColumnIndex);
         Integer stockProduct = cursor.getInt(stockColumnIndex);
         Integer priceProduct = cursor.getInt(priceColumnIndex);
-        byte[] imageProduct = cursor.getBlob(imageColumnIndex);
+        String imageProduct = cursor.getString(imageColumnIndex);
 
         mNameProduct.setText(nameProduct);
         mStockProduct.setText(String.valueOf(stockProduct));
         mPriceProduct.setText(String.valueOf(priceProduct));
-        Bitmap bmProduct = BitmapFactory.decodeByteArray(imageProduct,0,imageProduct.length);
-        mImageProduct.setImageBitmap(bmProduct);
+
+        if (imageProduct.equals("@mipmap/ic_empty_image_product")) {
+            mImageProduct.setImageResource(R.mipmap.ic_empty_image_product);
+        } else {
+            mImageProduct.setImageURI(Uri.parse(imageProduct));
+
+        }
 
     }
+
 }

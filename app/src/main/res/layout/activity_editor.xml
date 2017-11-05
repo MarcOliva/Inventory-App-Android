@@ -18,8 +18,9 @@
             android:orientation="horizontal"
             android:padding="16dp">
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:id="@+id/edit_image_product"
+                android:layout_width="512px"
+                android:layout_height="512px"
                 android:src="@mipmap/ic_empty_image_product" />
 
             <RelativeLayout
@@ -27,6 +28,7 @@
                 android:layout_height="128dp">
 
                 <Button
+                    android:id="@+id/choose_image_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
@@ -39,7 +41,10 @@
             android:id="@+id/textInputName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="16dp"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            >
 
             <android.support.design.widget.TextInputEditText
                 android:id="@+id/name_edit_text"
@@ -53,12 +58,26 @@
 
         </android.support.design.widget.TextInputLayout>
 
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            >
+            <Button
+                android:id="@+id/decrease_stock_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                />
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/textInputStock"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputEditText
@@ -66,10 +85,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="16dp"
-                    android:layout_marginRight="16dp"
+                    android:layout_marginRight="8dp"
                     android:fontFamily="sans-serif"
                     android:hint="@string/hint_stock"
-                    android:inputType="number" />
+                    android:inputType="number"
+                    android:text="0"
+                    />
 
             </android.support.design.widget.TextInputLayout>
             <TextView
@@ -78,14 +99,23 @@
                 android:text="U"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
-                android:layout_marginRight="24dp"
+                android:layout_marginRight="16dp"
+                />
+            <Button
+                android:id="@+id/increase_stock_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+"
                 />
 
-        </RelativeLayout>
+        </LinearLayout>
 
         <RelativeLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            >
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/textInputPrice"
                 android:layout_width="match_parent"
@@ -99,7 +129,9 @@
                     android:layout_marginRight="16dp"
                     android:fontFamily="sans-serif"
                     android:hint="@string/hint_price"
-                    android:inputType="number" />
+                    android:inputType="number"
+                    android:text="0"
+                    />
             </android.support.design.widget.TextInputLayout>
             <TextView
                 android:layout_width="wrap_content"

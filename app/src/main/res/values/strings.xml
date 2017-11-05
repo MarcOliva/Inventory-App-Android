@@ -12,4 +12,28 @@
 
     <string name="action_save">Save</string>
     <string name="action_delete">Delete</string>
+
+    <string name="no_permission_gallery">You dont have permission to access file location !</string>
+
+    <string name="error_save_product">Error with saving product</string>
+    <string name="save_product">Product saved</string>
+
+    <string name="error_update_product">Error with updating product</string>
+    <string name="update_product">Product updated</string>
+
+    <string name="error_delete_product">Error with deleting product</string>
+    <string name="delete_product">Product deleted</string>
+
+    <string name="empty_name">The name can not be empty</string>
+
+    <string name="empty_stock">The stock can not be empty</string>
+
+    <string name="negative_stock">The stock can not be  a negative value</string>
+
+    <string name="empty_price">The price can not be empty</string>
+
+    <string name="negative_price">The price can not be a negative value</string>
+
+
+
 </resources>
