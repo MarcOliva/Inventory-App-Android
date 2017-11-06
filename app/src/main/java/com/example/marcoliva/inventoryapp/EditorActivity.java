@@ -110,7 +110,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             }
         });
 
-
         mDbHelper = new ProductDbHelper(this);
 
     }
@@ -390,7 +389,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         if (cursor == null || cursor.getCount() < 1) {
             return;
         }
-
 
         if (cursor.moveToFirst()) {
 
