@@ -1,19 +1,21 @@
 package com.example.marcoliva.inventoryapp;
 
-import android.Manifest;
 import android.app.LoaderManager;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -22,12 +24,9 @@ import com.example.marcoliva.inventoryapp.data.ProductContract;
 
 public class CatalogActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-
     private ProductCursorAdapter mCursorAdapter;
     private static final int PRODUCT_LOADER = 0;
     private ListView productListView;
-
-    private final int REQUEST_CODE = 999;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,16 +42,14 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             }
         });
 
-
         productListView = findViewById(R.id.list_view_products);
-
 
         mCursorAdapter = new ProductCursorAdapter(this, null);
         View emptyView = findViewById(R.id.empty_view);
 
         productListView.setEmptyView(emptyView);
 
-
+        productListView.setAdapter(mCursorAdapter);
         productListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -64,32 +61,67 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             }
         });
 
-
+        //Initialization of loader
         getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
-
-
     }
 
-    @Override
-    protected void onStart() {
-        ActivityCompat.requestPermissions(
-                CatalogActivity.this,
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                REQUEST_CODE);
-        super.onStart();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-            productListView.setAdapter(mCursorAdapter);
-
+    public void sellProduct(long idProduct, int stockProduct) {
+        int newStock = 0;
+        if (stockProduct > 0) {
+            newStock = stockProduct - 1;
         }
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK, newStock);
+        Uri uri = ContentUris.withAppendedId(ProductContract.ProductEntry.CONTENT_URI, idProduct);
+        getContentResolver().update(uri, contentValues, null, null);
 
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_catalog, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_delete_all:
+                showDeleteAllPetsDialog();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void deleteAllProducts(){
+        int rowsDeleted = getContentResolver().delete(ProductContract.ProductEntry.CONTENT_URI, null, null);
+        Log.v("CatalogActivity", rowsDeleted + " rows deleted from pet database");
+    }
+
+    private void showDeleteAllPetsDialog(){
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the postivie and negative buttons on the dialog.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_all_products_msg);
+        builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Delete" button, so delete all products.
+                deleteAllProducts();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Cancel" button, so dismiss the dialog
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
 

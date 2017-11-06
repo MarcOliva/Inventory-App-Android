@@ -326,15 +326,15 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             }
 
         } else {
-            rowsUpdate = getContentResolver().update(currentUri, values, null, null);
-            if (rowsUpdate != -1) {
-                Toast.makeText(this, getString(R.string.update_product), Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, getString(R.string.error_update_product), Toast.LENGTH_SHORT).show();
+            if(mProductHasChanged){
+                rowsUpdate = getContentResolver().update(currentUri, values, null, null);
+                if (rowsUpdate != -1) {
+                    Toast.makeText(this, getString(R.string.update_product), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, getString(R.string.error_update_product), Toast.LENGTH_SHORT).show();
+                }
             }
         }
-
-
     }
 
     private void deleteProduct() {
@@ -349,6 +349,28 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        // If the product hasn't changed, continue with handling back button press
+        if (!mProductHasChanged) {
+            super.onBackPressed();
+            return;
+        }
+
+        // Otherwise if there are unsaved changes, setup a dialog to warn the user.
+        // Create a click listener to handle the user confirming that changes should be discarded.
+        DialogInterface.OnClickListener discardButtonClickListener =
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // User clicked "Discard" button, close the current activity.
+                        finish();
+                    }
+                };
+
+        // Show dialog that there are unsaved changes
+        showUnsavedChangesDialog(discardButtonClickListener);
+    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -388,7 +410,9 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
             if (imageProduct.equals("@mipmap/ic_empty_image_product")) {
                 mProductImageView.setImageResource(R.mipmap.ic_empty_image_product);
+                uriImage = Uri.parse(imageProduct);
             } else {
+                uriImage = Uri.parse(imageProduct);
                 mProductImageView.setImageURI(Uri.parse(imageProduct));
             }
 

@@ -18,9 +18,11 @@ import com.example.marcoliva.inventoryapp.data.ProductContract;
 
 public class ProductCursorAdapter extends CursorAdapter {
 
+    private final CatalogActivity activity;
 
-    public ProductCursorAdapter(Context context, Cursor c) {
+    public ProductCursorAdapter(CatalogActivity context, Cursor c) {
         super(context, c, 0);
+        this.activity = context;
     }
 
     @Override
@@ -35,20 +37,19 @@ public class ProductCursorAdapter extends CursorAdapter {
         TextView mStockProduct = view.findViewById(R.id.product_stock);
         TextView mPriceProduct = view.findViewById(R.id.product_price);
         ImageView mImageProduct = view.findViewById(R.id.product_image);
+        ImageView mSaleProduct = view.findViewById(R.id.product_sale);
 
+        int _idColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry._ID);
         int nameColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_NAME);
         int stockColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK);
         int priceColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_PRICE);
         int imageColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_IMAGE);
 
+        final int _idProduct = cursor.getInt(_idColumnIndex);
         String nameProduct = cursor.getString(nameColumnIndex);
-        Integer stockProduct = cursor.getInt(stockColumnIndex);
+        final Integer stockProduct = cursor.getInt(stockColumnIndex);
         Integer priceProduct = cursor.getInt(priceColumnIndex);
         String imageProduct = cursor.getString(imageColumnIndex);
-
-        mNameProduct.setText(nameProduct);
-        mStockProduct.setText(String.valueOf(stockProduct));
-        mPriceProduct.setText(String.valueOf(priceProduct));
 
         if (imageProduct.equals("@mipmap/ic_empty_image_product")) {
             mImageProduct.setImageResource(R.mipmap.ic_empty_image_product);
@@ -56,6 +57,18 @@ public class ProductCursorAdapter extends CursorAdapter {
             mImageProduct.setImageURI(Uri.parse(imageProduct));
 
         }
+
+        mNameProduct.setText(nameProduct);
+        mStockProduct.setText(String.valueOf(stockProduct) + " Units");
+        mPriceProduct.setText(String.valueOf("$ " + priceProduct));
+
+        mSaleProduct.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                activity.sellProduct(_idProduct, stockProduct);
+            }
+        });
+
 
     }
 

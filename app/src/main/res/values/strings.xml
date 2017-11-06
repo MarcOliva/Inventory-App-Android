@@ -12,6 +12,7 @@
 
     <string name="action_save">Save</string>
     <string name="action_delete">Delete</string>
+    <string name="action_delete_all_products">Delete All Products</string>
 
     <string name="no_permission_gallery">You dont have permission to access file location !</string>
 
@@ -45,5 +46,7 @@
     <string name="delete">Delete</string>
 
     <string name="cancel">Cancel</string>
+
+    <string name="delete_all_products_msg">Delete all products?</string>
 
 </resources>
