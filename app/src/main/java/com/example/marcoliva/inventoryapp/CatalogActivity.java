@@ -73,7 +73,6 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             contentValues.put(ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK, newStock);
             Uri uri = ContentUris.withAppendedId(ProductContract.ProductEntry.CONTENT_URI, idProduct);
             getContentResolver().update(uri, contentValues, null, null);
-            mCursorAdapter.swapCursor(null);
         }
 
     }
