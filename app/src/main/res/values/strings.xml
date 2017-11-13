@@ -49,4 +49,8 @@
 
     <string name="delete_all_products_msg">Delete all products?</string>
 
+    <string name="big_image_msg">The image is too big</string>
+
+    <string name="max_dimens_image">128x128</string>
+
 </resources>

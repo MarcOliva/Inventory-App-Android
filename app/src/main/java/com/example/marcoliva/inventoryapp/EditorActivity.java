@@ -69,7 +69,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
-
+        init();
         currentUri = getIntent().getData();
         if (currentUri == null) {
             setTitle("Add a Product");
@@ -79,7 +79,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             getLoaderManager().initLoader(0, null, this);
         }
 
-        init();
 
         mChooseImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -144,7 +143,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             }
             return;
         }
-
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -153,14 +151,23 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
         if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
             uriImage = data.getData();
+            InputStream inputStream = null;
             try {
-                InputStream inputStream = getContentResolver().openInputStream(uriImage);
+                inputStream = getContentResolver().openInputStream(uriImage);
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                mProductImageView.setImageBitmap(bitmap);
+                if(bitmap.getWidth()<=128 && bitmap.getHeight()<=128){
+                    mProductImageView.setImageURI(uriImage);
+                }else{
+                    Toast.makeText(this, getString(R.string.big_image_msg), Toast.LENGTH_SHORT).show();
+                }
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+
+
+
+
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -211,10 +218,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                             }
                         };
                 // Show a dialog that notifies the user they have unsaved changes
-
                 showUnsavedChangesDialog(discardButtonClickListener);
                 return true;
-
 
         }
         return super.onOptionsItemSelected(item);

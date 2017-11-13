@@ -69,11 +69,12 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         int newStock = 0;
         if (stockProduct > 0) {
             newStock = stockProduct - 1;
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK, newStock);
+            Uri uri = ContentUris.withAppendedId(ProductContract.ProductEntry.CONTENT_URI, idProduct);
+            getContentResolver().update(uri, contentValues, null, null);
+            mCursorAdapter.swapCursor(null);
         }
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK, newStock);
-        Uri uri = ContentUris.withAppendedId(ProductContract.ProductEntry.CONTENT_URI, idProduct);
-        getContentResolver().update(uri, contentValues, null, null);
 
     }
 
@@ -93,12 +94,12 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         return super.onOptionsItemSelected(item);
     }
 
-    private void deleteAllProducts(){
+    private void deleteAllProducts() {
         int rowsDeleted = getContentResolver().delete(ProductContract.ProductEntry.CONTENT_URI, null, null);
         Log.v("CatalogActivity", rowsDeleted + " rows deleted from pet database");
     }
 
-    private void showDeleteAllPetsDialog(){
+    private void showDeleteAllPetsDialog() {
         // Create an AlertDialog.Builder and set the message, and click listeners
         // for the postivie and negative buttons on the dialog.
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -122,6 +123,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
+
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
 

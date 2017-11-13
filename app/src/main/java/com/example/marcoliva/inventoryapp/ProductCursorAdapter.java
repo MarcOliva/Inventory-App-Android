@@ -30,13 +30,14 @@ public class ProductCursorAdapter extends CursorAdapter {
         return LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
     }
 
+
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
 
         TextView mNameProduct = view.findViewById(R.id.product_name);
         TextView mStockProduct = view.findViewById(R.id.product_stock);
         TextView mPriceProduct = view.findViewById(R.id.product_price);
-        ImageView mImageProduct = view.findViewById(R.id.product_image);
+        final ImageView mImageProduct = view.findViewById(R.id.product_image);
         ImageView mSaleProduct = view.findViewById(R.id.product_sale);
 
         int _idColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry._ID);
@@ -54,9 +55,10 @@ public class ProductCursorAdapter extends CursorAdapter {
         if (imageProduct.equals("@mipmap/ic_empty_image_product")) {
             mImageProduct.setImageResource(R.mipmap.ic_empty_image_product);
         } else {
-            mImageProduct.setImageURI(Uri.parse(imageProduct));
 
+            mImageProduct.setImageURI(Uri.parse(imageProduct));
         }
+
 
         mNameProduct.setText(nameProduct);
         mStockProduct.setText(String.valueOf(stockProduct) + " Units");
@@ -69,7 +71,8 @@ public class ProductCursorAdapter extends CursorAdapter {
             }
         });
 
-
     }
+
+
 
 }
