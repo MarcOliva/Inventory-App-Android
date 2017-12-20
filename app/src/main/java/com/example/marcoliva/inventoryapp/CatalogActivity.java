@@ -1,37 +1,42 @@
 package com.example.marcoliva.inventoryapp;
 
-import android.app.LoaderManager;
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.CursorLoader;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
+import android.widget.Toast;
 
-import com.example.marcoliva.inventoryapp.data.ProductContract;
+import com.example.marcoliva.inventoryapp.data.DaoProduct;
+import com.example.marcoliva.inventoryapp.data.Product;
+import com.example.marcoliva.inventoryapp.data.ProductDb;
 
-public class CatalogActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+import java.util.ArrayList;
+import java.util.List;
 
-    private ProductCursorAdapter mCursorAdapter;
-    private static final int PRODUCT_LOADER = 0;
-    private ListView productListView;
+public class CatalogActivity extends AppCompatActivity implements ProductAdapter.OnItemClickListener {
+
+    private ProductAdapter recyclerViewAdapter;
+    private ProductListViewModel viewModel;
+    private RecyclerView productRecyclerView;
+    private ProductDb db;
+    public static DaoProduct daoProduct;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_catalog);
+        db = ProductDb.getDataBase(this);
+        daoProduct = db.daoProduct();
 
         FloatingActionButton fab = findViewById(R.id.fab_add_new_product);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -42,38 +47,50 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             }
         });
 
-        productListView = findViewById(R.id.list_view_products);
+        productRecyclerView = findViewById(R.id.recycler_view_products);
+        recyclerViewAdapter = new ProductAdapter(new ArrayList<Product>(), this, this);
 
-        mCursorAdapter = new ProductCursorAdapter(this, null);
-        View emptyView = findViewById(R.id.empty_view);
+        productRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        productListView.setEmptyView(emptyView);
+        productRecyclerView.setAdapter(recyclerViewAdapter);
 
-        productListView.setAdapter(mCursorAdapter);
-        productListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        viewModel = ViewModelProviders.of(this).get(ProductListViewModel.class);
+
+        final View emptyView = findViewById(R.id.empty_view);
+        viewModel.getListProduct().observe(this, new Observer<List<Product>>() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                Uri uri = ContentUris.withAppendedId(ProductContract.ProductEntry.CONTENT_URI, id);
-                Intent intent = new Intent(getApplicationContext(), EditorActivity.class);
-                intent.setData(uri);
-                startActivity(intent);
-
+            public void onChanged(@Nullable List<Product> products) {
+                recyclerViewAdapter.addProducts(products);
+                if (recyclerViewAdapter.getItemCount() == 0) {
+                    emptyView.setVisibility(View.VISIBLE);
+                } else {
+                    emptyView.setVisibility(View.GONE);
+                    productRecyclerView.setVisibility(View.VISIBLE);
+                }
             }
         });
 
-        //Initialization of loader
-        getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
+        if (recyclerViewAdapter.getItemCount() == 0) {
+            emptyView.setVisibility(View.VISIBLE);
+        } else {
+            emptyView.setVisibility(View.GONE);
+            productRecyclerView.setVisibility(View.VISIBLE);
+        }
+
     }
 
-    public void sellProduct(long idProduct, int stockProduct) {
+    public void sellProduct(Product sellProduct) {
+
         int newStock = 0;
-        if (stockProduct > 0) {
-            newStock = stockProduct - 1;
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK, newStock);
-            Uri uri = ContentUris.withAppendedId(ProductContract.ProductEntry.CONTENT_URI, idProduct);
-            getContentResolver().update(uri, contentValues, null, null);
+        if (sellProduct.getStock() > 0) {
+            newStock = sellProduct.getStock() - 1;
         }
+        try {
+            daoProduct.updateStockProduct(sellProduct.getId(), newStock);
+        } catch (Exception e) {
+            Toast.makeText(this, "No Update product", Toast.LENGTH_SHORT).show();
+        }
+
 
     }
 
@@ -94,8 +111,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     }
 
     private void deleteAllProducts() {
-        int rowsDeleted = getContentResolver().delete(ProductContract.ProductEntry.CONTENT_URI, null, null);
-        Log.v("CatalogActivity", rowsDeleted + " rows deleted from pet database");
+        daoProduct.deleteAllProducts();
     }
 
     private void showDeleteAllPetsDialog() {
@@ -124,25 +140,9 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     }
 
     @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-
-        String[] projection = {
-                ProductContract.ProductEntry._ID,
-                ProductContract.ProductEntry.COLUMN_PRODUCT_NAME,
-                ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK,
-                ProductContract.ProductEntry.COLUMN_PRODUCT_PRICE,
-                ProductContract.ProductEntry.COLUMN_PRODUCT_IMAGE
-        };
-        return new CursorLoader(this, ProductContract.ProductEntry.CONTENT_URI, projection, null, null, null);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mCursorAdapter.swapCursor(data);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        mCursorAdapter.swapCursor(null);
+    public void onItemClick(Product product) {
+        Intent intent = new Intent(getApplicationContext(), EditorActivity.class);
+        intent.putExtra("itemId",product.getId());
+        startActivity(intent);
     }
 }

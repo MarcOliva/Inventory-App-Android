@@ -26,10 +26,6 @@
                 >
             </meta-data>
         </activity>
-        <provider
-            android:authorities="com.example.marcoliva.inventoryapp"
-            android:name=".data.ProductProvider"
-            android:exported="false"></provider>
 
     </application>
 

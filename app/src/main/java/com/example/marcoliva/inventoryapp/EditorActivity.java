@@ -1,14 +1,10 @@
 package com.example.marcoliva.inventoryapp;
 
 import android.Manifest;
-import android.app.LoaderManager;
-import android.content.ContentValues;
-import android.content.CursorLoader;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -29,8 +25,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.example.marcoliva.inventoryapp.data.ProductContract;
-import com.example.marcoliva.inventoryapp.data.ProductDbHelper;
+import com.example.marcoliva.inventoryapp.data.DaoProduct;
+import com.example.marcoliva.inventoryapp.data.Product;
+import com.example.marcoliva.inventoryapp.data.ProductDb;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -39,7 +36,7 @@ import java.io.InputStream;
  * Created by ThinkSoft on 1/11/2017.
  */
 
-public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class EditorActivity extends AppCompatActivity {
 
 
     private TextInputEditText mNameEditText;
@@ -48,14 +45,17 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     private Button mChooseImageButton, mDecreaseStockButton, mIncreaseStockButton;
     private ImageView mProductImageView;
 
-    private ProductDbHelper mDbHelper;
-    private Uri currentUri;
+    private long currentProduct;
     private Uri uriImage;
-    private ContentValues values;
 
     final int REQUEST_CODE_GALLERY = 999;
 
+    private ProductDb db;
+    private DaoProduct daoProduct;
+
     private boolean mProductHasChanged = false;
+
+    private ProductListViewModel viewModel;
 
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
         @Override
@@ -69,17 +69,29 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
+        db = ProductDb.getDataBase(this);
+        daoProduct = db.daoProduct();
         init();
-        currentUri = getIntent().getData();
-        if (currentUri == null) {
+
+        currentProduct = getIntent().getLongExtra("itemId", -1);
+        if (currentProduct == -1) {
             setTitle("Add a Product");
             invalidateOptionsMenu();
         } else {
             setTitle("Edit Product");
-            getLoaderManager().initLoader(0, null, this);
+            Product product = daoProduct.getProductById(currentProduct);
+            mNameEditText.setText(product.getName());
+            mStockEditText.setText(product.getStock().toString());
+            mPriceEditText.setText(product.getPrice().toString());
+            if(product.getImage().equals("@mipmap/ic_empty_image_product")){
+                mProductImageView.setImageResource(R.mipmap.ic_empty_image_product);
+            }else{
+                mProductImageView.setImageURI(Uri.parse(product.getImage()));
+            }
+
         }
 
-
+        viewModel = ViewModelProviders.of(this).get(ProductListViewModel.class);
         mChooseImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,7 +121,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             }
         });
 
-        mDbHelper = new ProductDbHelper(this);
 
     }
 
@@ -155,23 +166,18 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             try {
                 inputStream = getContentResolver().openInputStream(uriImage);
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                if(bitmap.getWidth()<=128 && bitmap.getHeight()<=128){
+                if (bitmap.getWidth() <= 128 && bitmap.getHeight() <= 128) {
                     mProductImageView.setImageURI(uriImage);
-                }else{
+                } else {
                     Toast.makeText(this, getString(R.string.big_image_msg), Toast.LENGTH_SHORT).show();
                 }
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-
-
-
-
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -183,7 +189,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         //if this is a new product , hide the "Delete" menu item
-        if (currentUri == null) {
+        if (currentProduct == -1) {
             MenuItem menuItem = menu.findItem(R.id.action_delete);
             menuItem.setVisible(false);
         }
@@ -203,7 +209,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             case android.R.id.home:
                 // If the product hasn't changed, continue with navigating up to parent activity
                 // which is the {@link CatalogActivity}.
-                if(!mProductHasChanged){
+                if (!mProductHasChanged) {
                     NavUtils.navigateUpFromSameTask(EditorActivity.this);
                     return true;
                 }
@@ -224,7 +230,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         }
         return super.onOptionsItemSelected(item);
     }
-    private void showUnsavedChangesDialog(DialogInterface.OnClickListener discardButtonClickListener){
+
+    private void showUnsavedChangesDialog(DialogInterface.OnClickListener discardButtonClickListener) {
         // Create an AlertDialog.Builder and set the message, and click listeners
         // for the positive and negative buttons on the dialog.
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -273,7 +280,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     }
 
 
-
     private void saveProduct() {
         String nameString = mNameEditText.getText().toString().trim();
         int stockInteger = Integer.valueOf(mStockEditText.getText().toString().trim());
@@ -302,39 +308,39 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             return;
         }
 
-        if (currentUri == null) {
+        if (currentProduct == -1) {
             if (uriImage == null) {
                 imageUri = "@mipmap/ic_empty_image_product";
             } else {
                 imageUri = String.valueOf(uriImage);
             }
 
-        }else{
+        } else {
             imageUri = String.valueOf(uriImage);
         }
+        //empty object
+        Product product;
 
-        values = new ContentValues();
-        values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_NAME, nameString);
-        values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK, stockInteger);
-        values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_PRICE, priceInteger);
-        values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_IMAGE, imageUri);
-
-        Uri newUri;
-        int rowsUpdate = -1;
-        if (currentUri == null) {
-            newUri = getContentResolver().insert(ProductContract.ProductEntry.CONTENT_URI, values);
-            if (newUri == null) {
-                Toast.makeText(this, getString(R.string.error_save_product), Toast.LENGTH_SHORT).show();
-            } else {
+        if (currentProduct == -1) {
+            product = new Product(0, priceInteger, stockInteger, nameString, imageUri);
+            try {
+                viewModel.addProduct(product);
                 Toast.makeText(this, getString(R.string.save_product), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, getString(R.string.error_save_product), Toast.LENGTH_SHORT).show();
             }
-
         } else {
-            if(mProductHasChanged){
-                rowsUpdate = getContentResolver().update(currentUri, values, null, null);
-                if (rowsUpdate != -1) {
-                    Toast.makeText(this, getString(R.string.update_product), Toast.LENGTH_SHORT).show();
-                } else {
+            if (mProductHasChanged) {
+                product = daoProduct.getProductById(currentProduct);
+                product.setPrice(priceInteger);
+                product.setStock(stockInteger);
+                product.setName(nameString);
+                product.setImage(imageUri);
+                daoProduct.updateProduct(product);
+                Toast.makeText(this, getString(R.string.update_product), Toast.LENGTH_SHORT).show();
+                try {
+
+                } catch (Exception e) {
                     Toast.makeText(this, getString(R.string.error_update_product), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -342,13 +348,12 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     private void deleteProduct() {
-        int rowsDelete = -1;
-        if (currentUri != null) {
-            rowsDelete = getContentResolver().delete(currentUri, null, null);
-            if (rowsDelete == -1) {
-                Toast.makeText(this, getString(R.string.error_delete_product), Toast.LENGTH_SHORT).show();
-            } else {
+        if (currentProduct != -1) {
+            try {
+                daoProduct.delete(daoProduct.getProductById(currentProduct));
                 Toast.makeText(this, getString(R.string.delete_product), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, getString(R.string.error_delete_product), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -376,57 +381,4 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         showUnsavedChangesDialog(discardButtonClickListener);
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        String[] projection = {
-                ProductContract.ProductEntry._ID,
-                ProductContract.ProductEntry.COLUMN_PRODUCT_NAME,
-                ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK,
-                ProductContract.ProductEntry.COLUMN_PRODUCT_PRICE,
-                ProductContract.ProductEntry.COLUMN_PRODUCT_IMAGE
-        };
-        return new CursorLoader(this, currentUri, projection, null, null, null);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        // Bail early if the cursor is null or there is less than 1 row in the cursor
-        if (cursor == null || cursor.getCount() < 1) {
-            return;
-        }
-
-        if (cursor.moveToFirst()) {
-
-            int nameColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_NAME);
-            int stockColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_STOCK);
-            int priceColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_PRICE);
-            int imageColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_IMAGE);
-
-            String nameProduct = cursor.getString(nameColumnIndex);
-            Integer stockProduct = cursor.getInt(stockColumnIndex);
-            Integer priceProduct = cursor.getInt(priceColumnIndex);
-            String imageProduct = cursor.getString(imageColumnIndex);
-
-            mNameEditText.setText(nameProduct);
-            mStockEditText.setText(String.valueOf(stockProduct));
-            mPriceEditText.setText(String.valueOf(priceProduct));
-
-            if (imageProduct.equals("@mipmap/ic_empty_image_product")) {
-                mProductImageView.setImageResource(R.mipmap.ic_empty_image_product);
-                uriImage = Uri.parse(imageProduct);
-            } else {
-                uriImage = Uri.parse(imageProduct);
-                mProductImageView.setImageURI(Uri.parse(imageProduct));
-            }
-
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        mNameEditText.setText("");
-        mStockEditText.setText("");
-        mPriceEditText.setText("");
-        mProductImageView.setImageResource(R.mipmap.ic_empty_image_product);
-    }
 }
